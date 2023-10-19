@@ -29,6 +29,8 @@ setup_py_tmpl = inspect.cleandoc(
         url=%(url)r,
         maintainer="RobotPy",
         maintainer_email="robotpy@googlegroups.com",
+        long_description=%(description)r,
+        long_description_content_type="text/markdown",
         data_files=%(data_files)r,
     )
 
@@ -120,6 +122,9 @@ def create_wheel(
     # hack for implicit dev packages
     if data["name"].endswith("-dev"):
         dev = True
+
+    # Add description to make 'twine check' happy
+    data["description"] = f"{data['name']}\n{'='*len(data['name'])}"
 
     # enforce library restrictions
     # -> normal package must have .so that match SONAME
