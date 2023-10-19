@@ -10,7 +10,7 @@ import sys
 import subprocess
 import typing
 
-whl_platform = "linux_armv7l"
+whl_platform = "linux_roborio"
 
 setup_py_tmpl = inspect.cleandoc(
     """
