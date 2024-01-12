@@ -59,8 +59,8 @@ def get_soname(path: str) -> str:
 
 
 def enforce_structure(
-    prefix: pathlib.Path, soname_must_match: bool
-) -> typing.List[str]:
+    prefix: str, strip: typing.Optional[pathlib.Path], soname_must_match: bool
+) -> typing.List[typing.Tuple[str, typing.List[str]]]:
     # Can only install files to the python prefix, which is /usr/local
     data_files = []
     for root, _, files in os.walk(prefix):
@@ -70,14 +70,17 @@ def enforce_structure(
             if os.path.islink(full_fname):
                 raise ValueError(f"{full_fname}: is a symlink")
 
-            if (
-                (fname.endswith("so") or ".so." in fname)
-                and not fname.endswith(".debug")
-                and not fname.endswith("-arm-linux-gnueabi.so")
+            if (fname.endswith("so") or ".so." in fname) and not fname.endswith(
+                ".debug"
             ):
-                soname = get_soname(full_fname)
-                if soname_must_match != (soname == fname):
-                    raise ValueError(f"{full_fname}: SONAME is {soname}")
+                if strip:
+                    print("+", strip, full_fname)
+                    subprocess.check_call([strip, full_fname])
+
+                if not fname.endswith("-arm-linux-gnueabi.so"):
+                    soname = get_soname(full_fname)
+                    if soname_must_match != (soname == fname):
+                        raise ValueError(f"{full_fname}: SONAME is {soname}")
 
             root_files.append(full_fname)
 
@@ -93,6 +96,7 @@ def create_wheel(
     data_root: pathlib.Path,
     dev: bool,
     dbg: bool,
+    strip: typing.Optional[pathlib.Path],
     output_path: pathlib.Path,
 ):
     """
@@ -132,7 +136,7 @@ def create_wheel(
 
     with switch_cwd(data_root):
         data_files = enforce_structure(
-            os.path.join("usr", "local"), soname_must_match=not dev
+            os.path.join("usr", "local"), strip, soname_must_match=not dev
         )
     data["data_files"] = data_files
 
@@ -164,7 +168,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "-o", "--output-path", type=pathlib.Path, default=pathlib.Path(".")
     )
+    parser.add_argument(
+        "--strip",
+        help="Executable to call to strip any shared libraries present",
+        default=None,
+        type=pathlib.Path,
+    )
 
     args = parser.parse_args()
 
-    create_wheel(args.data_py, args.data_root, args.dev, args.dbg, args.output_path)
+    create_wheel(
+        args.data_py, args.data_root, args.dev, args.dbg, args.strip, args.output_path
+    )
