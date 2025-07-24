@@ -79,7 +79,7 @@ def enforce_structure(
 
                 if not (
                     fname.endswith("-arm-linux-gnueabi.so")
-                    or fname.endswith("-aarch64-linux-gnu")
+                    or fname.endswith("-aarch64-linux-gnu.so")
                 ):
                     soname = get_soname(full_fname)
                     if soname_must_match != (soname == fname):
