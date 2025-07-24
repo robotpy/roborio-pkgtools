@@ -77,7 +77,10 @@ def enforce_structure(
                     print("+", strip, full_fname)
                     subprocess.check_call([strip, full_fname])
 
-                if not fname.endswith("-arm-linux-gnueabi.so"):
+                if not (
+                    fname.endswith("-arm-linux-gnueabi.so")
+                    or fname.endswith("-aarch64-linux-gnu")
+                ):
                     soname = get_soname(full_fname)
                     if soname_must_match != (soname == fname):
                         raise ValueError(f"{full_fname}: SONAME is {soname}")
